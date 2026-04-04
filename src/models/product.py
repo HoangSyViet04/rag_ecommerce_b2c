@@ -21,3 +21,16 @@ class Product(BaseModel):
         "from_attributes": True
     }
                          
+
+class ProductCreate(BaseModel):
+    """Schema ép kiểu dữ liệu khi Admin muốn thêm sản phẩm mới"""
+    name: str = Field(..., description="Tên sản phẩm")
+    price: float = Field(..., gt=0, description="Giá bán (phải lớn hơn 0)")
+    category: str = Field(..., description="Mã danh mục (vd: thoi_trang, dien_tu)")
+    description: str = Field(..., description="Mô tả chi tiết sản phẩm")
+    status: str = Field(default="active", description="Trạng thái kinh doanh (active/inactive)")
+
+class ProductResponse(BaseModel):
+    """Schema trả về báo cáo kết quả thêm mới"""
+    message: str
+    product_id: Optional[int] = None

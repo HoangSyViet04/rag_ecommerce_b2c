@@ -20,3 +20,12 @@ VALUES (
         'thoi_trang',
         450000
     );
+
+
+CREATE TABLE ChatHistory (
+    MessageID INT IDENTITY(1,1) PRIMARY KEY,
+    SessionID VARCHAR(50) NOT NULL,
+    SenderRole VARCHAR(10) NOT NULL, -- Chỉ lưu 'user' hoặc 'assistant'
+    Content NVARCHAR(MAX) NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE()
+);

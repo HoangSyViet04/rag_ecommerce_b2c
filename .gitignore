@@ -7,3 +7,5 @@ __pycache__/
 tests/
 *.log
 docs/
+
+so_do.mmd

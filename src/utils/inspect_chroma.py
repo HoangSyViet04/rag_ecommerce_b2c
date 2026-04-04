@@ -11,7 +11,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from src.core.config import settings
 
 def inspect_vector_db():
-    print("🔍 ĐANG MỞ HỘP ĐEN CHROMADB...\n")
+    print(" ĐANG MỞ HỘP ĐEN CHROMADB...\n")
     
     # Load Embeddings & DB
     embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001",
@@ -22,7 +22,7 @@ def inspect_vector_db():
     try:
         vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
     except Exception as e:
-        print(f"❌ Lỗi: {e}")
+        print(f" [X] Lỗi: {e}")
         return
 
     # Lấy toàn bộ dữ liệu ra (lưu ý: nếu DB quá lớn thì thêm limit)
@@ -30,7 +30,7 @@ def inspect_vector_db():
     db_content = vectorstore.get()
     
     total_chunks = len(db_content['ids'])
-    print(f"📊 TỔNG SỐ ĐOẠN (CHUNKS) TRONG NÃO PHẢI: {total_chunks}\n")
+    print(f"TỔNG SỐ ĐOẠN (CHUNKS) TRONG NÃO PHẢI: {total_chunks}\n")
     print("-" * 50)
 
     # In thử 3 chunk đầu tiên để xem hình thù
@@ -40,10 +40,10 @@ def inspect_vector_db():
         text = db_content['documents'][i]
         metadata = db_content['metadatas'][i]
         
-        print(f"📦 CHUNK [{i+1}] | ID: {chunk_id}")
-        print(f"   🏷️ Metadata : {metadata}")
-        print(f"   📝 Nội dung : {text[:200]}... (đã cắt bớt cho gọn)")
-        print(f"   📏 Độ dài   : {len(text)} ký tự")
+        print(f" +) CHUNK [{i+1}] | ID: {chunk_id}")
+        print(f"    Metadata : {metadata}")
+        print(f"    Nội dung : {text[:200]}... (đã cắt bớt cho gọn)")
+        print(f"    Độ dài   : {len(text)} ký tự")
         print("-" * 50)
 
 if __name__ == "__main__":

@@ -39,8 +39,7 @@ def sync_products_to_vector_db():
     # 3. Kéo dữ liệu từ SQL Server
     print("[2] Truy xuất các sản phẩm đang Active từ SQL...")
     try:
-        query = text("SELECT product_id, name, description, category ,price FROM products " \
-        "WHERE status = 'active'")
+        query = text("SELECT product_id, name, description, category ,price, status FROM products")
         result = conn.execute(query).mappings().all()
         print(f" -> Lấy thành công {len(result)} sản phẩm.")
     except Exception as e: 
@@ -51,38 +50,40 @@ def sync_products_to_vector_db():
     # 4. Xử lý logic đồng bộ (Thêm/Cập nhật Vector)
     print("[3] Bắt đầu đồng bộ vào ChromaDB...")
     
-    texts = []
-    metadatas = []
-    ids =[]
+    active_texts, active_metas, active_ids = [], [], []
+    inactive_ids  = []
 
     for row in result:
         # ID phải là string để lưu vào Chroma
         doc_id = f"prod_{row['product_id']}"
-        ids.append(doc_id)
 
-        # gộp thông tin làm nội dung tìm kiếm ngữ nghĩa
-        content = f"sản phẩm: {row['name'] } . Phân loại: {row['category']} . Chi tiết: {row['description']} "
-        texts.append(content)
-
-        # Metadata dùng để RAG filter
-        # Ép kiểu an toàn bằng float để tránh lỗi Decimal của SQL
-        metadata = {
-            "source": "sql_server",
-            "product_id": row["product_id"],
-            "name": row["name"],
-            "category": row["category"],
-            "price": float(row["price"])
-        }
-        metadatas.append(metadata)
-
+        if row['status'] == 'active':
+            content = f"sản phẩm: {row['name'] } . Phân loại: {row['category']} . Chi tiết: {row['description']} "
+            active_texts.append(content)
+            active_ids.append(doc_id)
+            active_metas.append({
+                "source": "sql_server",
+                "product_id": row["product_id"],
+                "name": row["name"],
+                "category": row["category"],
+                "price": float(row["price"])
+            })
+        else:
+            inactive_ids.append(doc_id)
         print( f" Sẵn sàng đồng bộ (Sync):[{doc_id}] {row['name']} | Giá: {row['price']}đ")
 
-    if texts:
+    if active_texts:
         # Add_texts sẽ tự động ghi đè/cập nhật nếu ID đã tồn tại trong ChromaDB
-        vectorstore.add_texts(texts=texts, 
-                              metadatas= metadatas,
-                              ids = ids)
-        print(f"-> Đồng bộ thành công {len(texts)} sản phẩm vào ChromaDB.")
+        vectorstore.add_texts(texts=active_texts, 
+                              metadatas= active_metas,
+                              ids = active_ids)
+        print(f"-> Đồng bộ thành công {len(active_texts)} sản phẩm vào ChromaDB.")
+    if inactive_ids:
+        try: # try -except để tránh lỗi nếu có ID không tồn tại trong ChromaDB
+            vectorstore.delete(ids=inactive_ids)
+            print(f"-> Đã xóa {len(inactive_ids)} sản phẩm không còn active khỏi ChromaDB")
+        except Exception as e:
+            print(f"-> Lỗi khi xóa sản phẩm khỏi ChromaDB:{e}")
 
     # 5. Đóng kết nối SQL Server
     conn.close()

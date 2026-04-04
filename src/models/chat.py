@@ -17,4 +17,3 @@ class AgentLLMOutput(BaseModel):
     thought_process: str=Field(..., description="Suy nghĩ nội tâm của AI trước khi trả lời")
     final_answer: str=Field(..., description="Câu trả lời cuối cùng cho khách")
     needs_human: bool = Field(default= False, description="Đánh giá xem có cần con người can thiệp không")
-    

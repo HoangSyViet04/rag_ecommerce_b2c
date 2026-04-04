@@ -84,10 +84,19 @@ Task 4.3 - Router & Handoff: Code src/engine/router.py. Phân ra các luồng: R
 Gói bộ não lại, kiểm duyệt đầu ra.
 
 Task 5.1 - Guardrails: Code src/engine/guardrails.py. Viết Regex hoặc dùng 1 LLM nhỏ xíu để check: Có nói giá 0đ không? Có nói bậy không? Có recommend mua web khác không? Nếu vi phạm -> Trả về câu xin lỗi an toàn.
+(Chặn đứng rủi ro: Đã xây dựng thành công guardrails.py để làm "bảo vệ cửa". Hệ thống giờ đây miễn nhiễm với việc khách hàng nhắc đến đối thủ (Shopee, Lazada...), chửi thề, hoặc hỏi những câu ngáo giá.
+Xử lý tinh tế: Thay vì báo lỗi sập hệ thống, AI tự động tráo bằng các câu trả lời xin lỗi chuẩn nghiệp vụ chăm sóc khách hàng.)
 
 Task 5.2 - Chat Service: Code src/services/chat_service.py nối LCEL chain. Nhận request -> Nạp Memory -> Gọi Router -> Sinh text -> Lọc qua Guardrails -> Trả kết quả.
+(Kiến trúc Trí nhớ Kép (Dual-Memory): Đây là điểm "ăn tiền" nhất của hệ thống.
+Siêu tốc độ: Dùng bộ nhớ tạm (Redis/RAM) để nhồi ngữ cảnh cho AI, giúp tốc độ phản hồi API nhanh như điện, khách không bị giật lag.
+Lưu vết vĩnh viễn: Đã tự code hàm save_chat_to_sql chọc thẳng vào SQL Server lưu dưới dạng văn bản thuần (NVARCHAR). Cột SenderRole lưu chuẩn "user" và "assistant". Admin mở Database ra đọc Tiếng Việt trong vắt, không bị mã hóa lằng nhằng.)
 
-Task 5.3: Mở src/api/routes.py (FastAPI).
+Task 5.3: Mở src/api/routes.py (FastAPI)., them endpoint add_product vào database (Tận dụng Pydantic Schemas: Sử dụng triệt để bộ khuôn đúc xịn xò của ông (models/chat.py và models/product.py) để kiểm duyệt dữ liệu đầu vào tự động (chặn ngay mớ data rác trước khi chạm vào Database).
+
+API /chatbot: Xử lý chat mượt mà. Đã áp dụng Background Tasks để việc lưu log SQL Server chạy ngầm, không làm khách hàng phải chờ đợi.
+
+API /add_product: Cổng cho Admin đăng bán hàng. Tự động lấy product_id sinh ra từ SQL Server, và đỉnh cao nhất là tích hợp Background Task gọi sync_products_to_vector_db để tự động nhét sản phẩm mới vào Não AI (ChromaDB) mà không làm sập luồng chính.)
 
 💻 Phase 6: Giao diện, MLOps & Deploy (UI & Monitoring)
 Đưa ra ánh sáng cho khách hàng xài và theo dõi.
