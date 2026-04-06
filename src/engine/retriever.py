@@ -20,10 +20,10 @@ def get_hybrid_retriever():
     bm25_retriever = BM25Retriever.from_documents(chunks)
     bm25_retriever.k = 2  # lấy top 2 từ khóa khớp nhất
 
-    # 3. FUSION (Hợp nhất): Dùng EnsembleRetriever
-    # Cấu hình trọng số: 60% tin vào Vector (Ý nghĩa), 40% tin vào Keyword (Từ khóa)
+    # 3. FUSION :Dùng EnsembleRetriever
+    # Cấu hình trọng số: 70% tin vào Vector (Ý nghĩa), 30% tin vào Keyword (Từ khóa)
     ensemble_retriever = EnsembleRetriever(
         retrievers=[vector_retriever,bm25_retriever],
-        weights=[0.6,0.4]
+        weights=[0.7,0.3]
     )
     return ensemble_retriever

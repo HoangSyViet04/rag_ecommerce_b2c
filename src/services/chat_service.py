@@ -6,6 +6,7 @@ import json
 import redis
 from src.engine.router import process_query
 from src.engine.guardrails import apply_guardrails
+from src.core.config import settings
 
 # CẤU HÌNH REDIS / RAM FALLBACK
 fallback_memory ={}
@@ -13,16 +14,16 @@ USE_REDIS = False
 SESSION_TTL = 86400  # Thời gian sống của phiên chat: 24h (tính bằng giây)
 
 try: 
-    # Kết nối thẳng vào Redis Server (localhost:6379)
-    redis_client = redis.Redis(host="localhost", 
-                               port= 6379,
-                               db =0,
+    # Kết nối thẳng vào Redis Server 
+    redis_client = redis.Redis(host=settings.REDIS_HOST, 
+                               port= settings.REDIS_PORT,
+                               db =settings.REDIS_DB,
                                decode_responses= True)
     redis_client.ping() # Kiểm tra kết nối
     USE_REDIS = True
     print(f"-> Kết nối Redis Server thành công")
 except redis.ConnectionError:
-    print("[X] :Không tìm thấy Redis Server! Hệ thống tự động chuyển sang dùng RAM (Dictionary) để tạm thay thế")
+    print("[X] :Không tìm thấy Redis Server, Hệ thống tự động chuyển sang dùng RAM (Dictionary) để tạm thay thế")
 
 # HÀM XỬ LÝ NGHIỆP VỤ LÕI
 def process_chat_message(session_id: str, user_message:str) -> str:
@@ -49,9 +50,12 @@ def process_chat_message(session_id: str, user_message:str) -> str:
 
     # 2. GỌI BỘ NÃO AI (Phase 4 - Router)
     try: 
-        # Note: Hiện tại process_query của ta chỉ nhận text, AI chưa tận dụng lịch sử chat.
-        # Ở bước tối ưu nâng cao, ta có thể truyền chuỗi chat_history này vào hàm process_query.
-        raw_ai_response = process_query(user_message)
+        formatted_history = ""
+        if chat_history:
+            formatted_history = "\n".join(
+                [f"{'Khách' if msg['role']=='user' else 'assistant'}: {msg['content']}" for msg in chat_history[-4:]]
+            )
+        raw_ai_response = process_query(user_message,chat_history = formatted_history)
     except Exception as e:
         print(f"[Lỗi engine] Sự cố nội bộ:{str(e)}")
         raw_ai_response = "Dạ, hệ thống của em đang bảo trì một chút, anh/chị vui lòng thử lại sau vài giây nhé"

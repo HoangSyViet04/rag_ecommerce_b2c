@@ -25,8 +25,15 @@ class Settings(BaseSettings):
     # Cấu hình LangSmith
     LANGCHAIN_TRACING_V2: str = "false"
     LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
-    LANGCHAIN_API_KEY: str = ""
+    LANGCHAIN_API_KEY: str = Field(...,description= "Bắt buộc phải có API KEY của LangSmith")
     LANGCHAIN_PROJECT: str = "default"
+
+    # Cấu hình Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
+    ANONYMIZED_TELEMETRY: bool 
 
     @computed_field
     def SQL_DATABASE_URL(self) -> str:

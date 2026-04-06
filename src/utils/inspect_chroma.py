@@ -8,19 +8,24 @@ Cách dùng: Chạy file này, nó sẽ kết nối vào thư mục chứa Chrom
 import os
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from src.core.config import settings
 
 def inspect_vector_db():
-    print(" ĐANG MỞ HỘP ĐEN CHROMADB...\n")
+    print(" ĐANG MỞ CHROMADB...\n")
     
     # Load Embeddings & DB
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001",
-                                              google_api_key=settings.GEMINI_API_KEY)
+    embeddings = HuggingFaceEmbeddings(
+        model_name="bkai-foundation-models/vietnamese-bi-encoder",
+        encode_kwargs={'normalize_embeddings': True}
+    )
     
     db_path = r"D:\Project\rag_ecommerce_b2c\data\chroma_db"
     
     try:
-        vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
+        vectorstore = Chroma(
+            persist_directory=db_path,
+            embedding_function=embeddings)
     except Exception as e:
         print(f" [X] Lỗi: {e}")
         return

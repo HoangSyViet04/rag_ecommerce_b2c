@@ -1,53 +1,73 @@
-
-
 services:
-  # --- 1. MÁY CHỦ SQL SERVER ---
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    container_name: ai_store_sql
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${DB_PASSWORD} # Lấy mật khẩu từ file .env
-    ports:
-      - "1433:1433"
-    volumes:
-      - sql_data:/var/opt/mssql # Giữ lại dữ liệu khi tắt máy
-
-  # --- 2. MÁY CHỦ REDIS ---
+  # --- 1. MÁY CHỦ REDIS (Lưu Session/Memory tạm) ---
   redis:
     image: redis:alpine
     container_name: ai_store_redis
     ports:
       - "6379:6379"
+    restart: always
 
-  # --- 3. MÁY CHỦ BACKEND (FASTAPI) ---
+  # --- 2. MÁY CHỦ SQL SERVER (Lưu Inventory/Chat History) ---
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: ai_store_sql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    restart: always
+
+  # --- 3. CONTAINER MỒI (Chạy Script tạo DB/Table rồi tự tắt) ---
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: ai_store_db_init
+    depends_on:
+      - sqlserver
+    volumes:
+      # Map file từ đường dẫn ông cung cấp vào container
+      - ./data/init.sql:/init.sql
+    command: >
+      /bin/bash -c "
+      echo 'Đang đợi SQL Server khởi động (20s)...';
+      sleep 20;
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P '${DB_PASSWORD}' -i /init.sql;
+      echo 'Khởi tạo dữ liệu thành công!';
+      "
+
+  # --- 4. MÁY CHỦ BACKEND (FastAPI & AI Engine) ---
   backend:
     build: .
     container_name: ai_store_backend
     ports:
       - "8000:8000"
     depends_on:
-      - sqlserver
       - redis
+      - sqlserver
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      # TRỌNG TÂM: Trong Docker, các máy gọi nhau bằng TÊN SERVICE, không dùng 127.0.0.1 nữa
-      - DB_SERVER=sqlserver 
+      - DB_SERVER=sqlserver
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
-      - ./.env:/app/.env  # Map file .env để lấy API Key Gemini/LangSmith
-      - ./data:/app/data  # Map thư mục data (ChromaDB) để không bị mất não
+      - ./.env:/app/.env
+      - ./data:/app/data
+    restart: always
 
-  # --- 4. MÁY CHỦ FRONTEND (NGINX) ---
+  # --- 5. MÁY CHỦ FRONTEND (Nginx - Giao diện Web) ---
   frontend:
     image: nginx:alpine
     container_name: ai_store_frontend
     ports:
-      - "80:80"  # Chạy ở cổng mặc định của web
+      - "80:80"
     volumes:
-      - ./frontend:/usr/share/nginx/html # Đẩy folder frontend của ông vào Nginx
+      - ./frontend:/usr/share/nginx/html
     depends_on:
       - backend
+    restart: always
 
 volumes:
   sql_data:

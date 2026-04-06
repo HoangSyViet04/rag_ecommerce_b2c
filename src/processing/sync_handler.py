@@ -8,6 +8,7 @@ import os
 from sqlalchemy import create_engine , text
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 # import cau hinh
 from src.core.config import settings
@@ -26,9 +27,9 @@ def sync_products_to_vector_db():
     
     # 2. Khởi tạo kết nối tới Bán cầu não phải (ChromaDB)
     db_path = os.path.join(os.path.dirname(os.path.dirname((os.path.dirname(os.path.abspath(__file__))))),'data','chroma_db')
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001",
-        google_api_key= settings.GEMINI_API_KEY
+    embeddings = HuggingFaceEmbeddings(
+        model_name="bkai-foundation-models/vietnamese-bi-encoder",
+        encode_kwargs={'normalize_embeddings': True}
     )
     vectorstore = Chroma(
         persist_directory= db_path,

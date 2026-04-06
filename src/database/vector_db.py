@@ -13,6 +13,7 @@ import os
 import pickle
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from src.core.config import settings
 
 def get_vector_db():
@@ -20,9 +21,9 @@ def get_vector_db():
     Khởi tạo và trả về đối tượng ChromaDB.
     Hàm này sẽ được gọi bởi Retriever ở Phase sau.
     """
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model = "models/gemini-embedding-001",
-        google_api_key= settings.GEMINI_API_KEY
+    embeddings = HuggingFaceEmbeddings(
+        model_name="bkai-foundation-models/vietnamese-bi-encoder",
+        encode_kwargs={'normalize_embeddings': True}
     )
 
     # Trỏ đúng vào thư mục ChromaDB đã tạo 
