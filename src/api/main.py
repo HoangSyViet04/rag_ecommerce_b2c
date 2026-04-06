@@ -4,6 +4,10 @@ Mở cổng Uvicorn, cấu hình CORS chống hack, và gộp các Routes lại.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import router
+from monitoring.langsmith_tracer import enable_langsmith_tracing
+
+# Khởi động Langsmith Tracing để theo dõi hiệu suất và lỗi của hệ thống RAG
+enable_langsmith_tracing()
 
 # Khởi tạo App FastAPI
 app = FastAPI(

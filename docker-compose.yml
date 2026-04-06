@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # --- 1. MÁY CHỦ SQL SERVER ---
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: ai_store_sql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD} # Lấy mật khẩu từ file .env
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql # Giữ lại dữ liệu khi tắt máy
+
+  # --- 2. MÁY CHỦ REDIS ---
+  redis:
+    image: redis:alpine
+    container_name: ai_store_redis
+    ports:
+      - "6379:6379"
+
+  # --- 3. MÁY CHỦ BACKEND (FASTAPI) ---
+  backend:
+    build: .
+    container_name: ai_store_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - sqlserver
+      - redis
+    environment:
+      # TRỌNG TÂM: Trong Docker, các máy gọi nhau bằng TÊN SERVICE, không dùng 127.0.0.1 nữa
+      - DB_SERVER=sqlserver 
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./.env:/app/.env  # Map file .env để lấy API Key Gemini/LangSmith
+      - ./data:/app/data  # Map thư mục data (ChromaDB) để không bị mất não
+
+  # --- 4. MÁY CHỦ FRONTEND (NGINX) ---
+  frontend:
+    image: nginx:alpine
+    container_name: ai_store_frontend
+    ports:
+      - "80:80"  # Chạy ở cổng mặc định của web
+    volumes:
+      - ./frontend:/usr/share/nginx/html # Đẩy folder frontend của ông vào Nginx
+    depends_on:
+      - backend
+
+volumes:
+  sql_data:

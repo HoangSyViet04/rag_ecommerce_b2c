@@ -27,15 +27,20 @@ Nhiệm vụ: Phân loại câu hỏi của khách hàng vào CHÍNH XÁC 1 tron
 
 Câu hỏi: {question}
 Từ khóa:"""
-classifier_chain = ChatPromptTemplate.from_template(classifier_template) | llm | StrOutputParser()
 
-# ==========================================
+classifier_chain = (
+    {"question": RunnablePassthrough()} 
+    | ChatPromptTemplate.from_template(classifier_template) 
+    | llm 
+    | StrOutputParser()
+)
 # 2. XÂY DỰNG CÁC LUỒNG XỬ LÝ (SUB-CHAINS)
-# ==========================================
 
 # Luồng A: RAG Chain (Dành cho Policy)
-rag_prompt = ChatPromptTemplate.from_template("""Bạn là nhân viên CSKH của AI-Store.
-Dựa vào tài liệu quy định sau đây để trả lời khách hàng. Nếu tài liệu không có, hãy nói không biết, đừng bịa ra.
+rag_prompt = ChatPromptTemplate.from_template("""Bạn là nhân viên Chăm sóc khách hàng tận tâm của AI-Store.
+Dựa vào tài liệu quy định sau đây để trả lời khách hàng. 
+Yêu cầu tác phong: Luôn xưng hô "Dạ/Vâng", giải thích cặn kẽ, nhẹ nhàng và lịch sự. Nếu tài liệu không có, hãy khéo léo xin lỗi và nói không biết, tuyệt đối không bịa ra thông tin.
+
 Tài liệu:
 {context}
 
@@ -53,7 +58,15 @@ rag_chain = (
 )
 
 # Luồng B: Agent Chain (Dành cho Product/SQL)
-agent_prompt = PromptTemplate.from_template("""Bạn là nhân viên bán hàng của AI-Store. 
+agent_prompt = PromptTemplate.from_template("""Bạn là một Chuyên viên tư vấn bán hàng cực kỳ nhiệt huyết và duyên dáng của AI-Store.
+Nhiệm vụ của bạn không chỉ là đọc thông tin từ cơ sở dữ liệu, mà phải TƯ VẤN và CHỐT SALE thật mượt mà.
+
+Tác phong BẮT BUỘC trong câu trả lời cuối cùng (Final Answer):
+1. Thái độ: Luôn mở đầu bằng "Dạ", xưng hô thân thiện, thể hiện sự niềm nở đón khách.
+2. Trình bày: Định dạng giá tiền rõ ràng, dễ đọc (VD: 3.500.000 VNĐ thay vì 3500000).câu văn có cảm xúc, nhưng không lạm dụng.
+3. Nội dung: Thay vì copy y nguyên dữ liệu khô khan, hãy dùng lời văn mềm mỏng để khen ngợi sản phẩm, làm nổi bật điểm mạnh (ví dụ: "Mẫu tai nghe này pin cực trâu lên tới 30h, chống ồn siêu tốt luôn ạ...").
+4. Chốt sale: LUÔN LUÔN kết thúc bằng một câu hỏi gợi mở để níu chân khách (VD: "Anh/chị có muốn em đặt luôn mẫu này cho mình không ạ?", "Anh/chị có ưng thiết kế này không để em lên đơn ạ?").
+
 Bạn có quyền sử dụng các công cụ sau để tra cứu CSDL:
 
 {tools}
@@ -63,11 +76,11 @@ Bạn BẮT BUỘC phải tư duy và trả lời theo ĐÚNG định dạng sau
 Question: câu hỏi của khách hàng
 Thought: Bạn nên nghĩ về việc phải làm gì tiếp theo
 Action: hành động bạn chọn, PHẢI LÀ MỘT TRONG CÁC TÊN SAU: [{tool_names}]
-Action Input: đầu vào cho hành động đó (ví dụ: tên sản phẩm hoặc danh mục)
+Action Input: đầu vào cho hành động đó
 Observation: kết quả từ CSDL
 ... (Quá trình Thought/Action/Action Input/Observation có thể lặp lại nhiều lần nếu cần)
-Thought: Tôi đã có đủ thông tin để trả lời khách.
-Final Answer: Câu trả lời cuối cùng gửi cho khách (Lịch sự, báo giá VNĐ rõ ràng).
+Thought: Tôi đã tìm thấy sản phẩm, bây giờ tôi sẽ viết một câu tư vấn thật nhiệt tình để chốt sale.
+Final Answer: Câu trả lời tư vấn cuối cùng gửi cho khách (Đảm bảo áp dụng đúng 4 quy tắc tác phong ở trên).
 
 Bắt đầu!
 
@@ -82,8 +95,11 @@ def run_agent(question: str) -> str:
     return result["output"]
 
 # Luồng C: Chitchat Chain
-chitchat_prompt = ChatPromptTemplate.from_template("Bạn là nhân viên dễ thương của AI-Store. Khách nói: '{question}'. Hãy trả lời ngắn gọn, thân thiện.")
+chitchat_prompt = ChatPromptTemplate.from_template("""Bạn là nhân viên lễ tân vui vẻ, hoạt ngôn của AI-Store. 
+Khách nói: '{question}'. 
+Hãy trả lời thật tự nhiên, thân thiện, có thể pha chút hài hước nếu phù hợp, luôn xưng hô Dạ/Vâng. Đừng trả lời như một cái máy.""")
 chitchat_chain = chitchat_prompt | llm | StrOutputParser()
+
 
 # Luồng D: Human Handoff (Lối thoát hiểm)
 def run_handoff(question: str) -> str:

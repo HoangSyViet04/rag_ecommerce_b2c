@@ -90,13 +90,12 @@ Xử lý tinh tế: Thay vì báo lỗi sập hệ thống, AI tự động trá
 Task 5.2 - Chat Service: Code src/services/chat_service.py nối LCEL chain. Nhận request -> Nạp Memory -> Gọi Router -> Sinh text -> Lọc qua Guardrails -> Trả kết quả.
 (Kiến trúc Trí nhớ Kép (Dual-Memory): Đây là điểm "ăn tiền" nhất của hệ thống.
 Siêu tốc độ: Dùng bộ nhớ tạm (Redis/RAM) để nhồi ngữ cảnh cho AI, giúp tốc độ phản hồi API nhanh như điện, khách không bị giật lag.
-Lưu vết vĩnh viễn: Đã tự code hàm save_chat_to_sql chọc thẳng vào SQL Server lưu dưới dạng văn bản thuần (NVARCHAR). Cột SenderRole lưu chuẩn "user" và "assistant". Admin mở Database ra đọc Tiếng Việt trong vắt, không bị mã hóa lằng nhằng.)
+Lưu vết vĩnh viễn: Đã code hàm save_chat_to_sql chọc thẳng vào SQL Server lưu dưới dạng văn bản thuần (NVARCHAR). Cột SenderRole lưu chuẩn "user" và "assistant". Admin mở Database ra đọc Tiếng Việt trong vắt, không bị mã hóa lằng nhằng.)
 
 Task 5.3: Mở src/api/routes.py (FastAPI)., them endpoint add_product vào database (Tận dụng Pydantic Schemas: Sử dụng triệt để bộ khuôn đúc xịn xò của ông (models/chat.py và models/product.py) để kiểm duyệt dữ liệu đầu vào tự động (chặn ngay mớ data rác trước khi chạm vào Database).
-
 API /chatbot: Xử lý chat mượt mà. Đã áp dụng Background Tasks để việc lưu log SQL Server chạy ngầm, không làm khách hàng phải chờ đợi.
-
 API /add_product: Cổng cho Admin đăng bán hàng. Tự động lấy product_id sinh ra từ SQL Server, và đỉnh cao nhất là tích hợp Background Task gọi sync_products_to_vector_db để tự động nhét sản phẩm mới vào Não AI (ChromaDB) mà không làm sập luồng chính.)
+
 
 💻 Phase 6: Giao diện, MLOps & Deploy (UI & Monitoring)
 Đưa ra ánh sáng cho khách hàng xài và theo dõi.

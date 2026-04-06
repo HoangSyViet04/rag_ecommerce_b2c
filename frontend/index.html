@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Store B2C Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center;}
+        .chat-container { width: 100%; max-width: 450px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 80vh; }
+        .chat-header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
+        .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 20px; line-height: 1.4; font-size: 14px; }
+        .msg-user { align-self: flex-end; background: #007bff; color: white; border-bottom-right-radius: 2px; }
+        .msg-bot { align-self: flex-start; background: #e9ecef; color: #333; border-bottom-left-radius: 2px; }
+        
+        /* CSS cho nút Handoff to đùng */
+        .handoff-btn { margin-top: 10px; padding: 12px; background-color: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-align: center; width: 100%; font-size: 16px; animation: pulse 1.5s infinite; }
+        .handoff-btn:hover { background-color: #c82333; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        .input-area { display: flex; border-top: 1px solid #ddd; padding: 10px; background: #fff; }
+        .input-area input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .input-area button { margin-left: 10px; padding: 10px 20px; border: none; background: #007bff; color: white; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">My-Store Vitdonal</div>
+    <div class="chat-box" id="chat-box">
+        <div class="message msg-bot">Dạ em chào anh/chị! Em có thể giúp gì cho mình hôm nay ạ?</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Nhập tin nhắn..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">Gửi</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000/api/chatbot"; 
+    // Tạo một session_id ngẫu nhiên cho khách
+    const sessionId = "session_" + Math.floor(Math.random() * 100000);
+
+    async function sendMessage() {
+        const inputField = document.getElementById("user-input");
+        const message = inputField.value.trim();
+        if (!message) return;
+
+        appendMessage(message, "msg-user");
+        inputField.value = "";
+        
+        // Thêm hiệu ứng "Đang gõ..."
+        const typingId = "typing-" + Date.now();
+        appendMessage("...", "msg-bot", typingId);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ session_id: sessionId, message: message })
+            });
+            
+            const data = await response.json();
+            
+            // Xóa chữ "Đang gõ..."
+            document.getElementById(typingId).remove();
+
+            // Đưa dòng này vào để soi xem rốt cuộc Server nó gửi cái gì xuống
+            console.log("Server trả về cái này nè: ", data);
+
+            // Bắt lỗi nếu Server trả về {"detail": "..."} thay vì trả về reply
+            if (data.detail) {
+                appendMessage("Lỗi từ Server: " + JSON.stringify(data.detail), "msg-bot");
+                return;
+            }
+
+            // Hiển thị câu trả lời của AI
+            appendMessage(data.reply, "msg-bot");
+
+            // LOGIC QUAN TRỌNG: NẾU CÓ CỜ HANDOFF THÌ VẼ NÚT
+            if (data.handoff_flag === true) {
+                renderHandoffButton();
+            }
+
+        } catch (error) {
+            document.getElementById(typingId).remove();
+            appendMessage("Lỗi kết nối đến Server AI!", "msg-bot");
+            console.error(error);
+        }
+    }
+
+    function appendMessage(text, className, id = null) {
+        const chatBox = document.getElementById("chat-box");
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message " + className;
+        msgDiv.innerText = text;
+        if (id) msgDiv.id = id;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function renderHandoffButton() {
+        const chatBox = document.getElementById("chat-box");
+        const btn = document.createElement("button");
+        btn.className = "handoff-btn";
+        btn.innerText = "📞 Gặp Tư vấn viên thật ngay";
+        btn.onclick = () => alert("Đang chuyển kết nối đến tổng đài viên CSKH...");
+        chatBox.appendChild(btn);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleEnter(event) {
+        if (event.key === "Enter") sendMessage();
+    }
+</script>
+
+</body>
+</html>

@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 # Danh sách đen (Blacklist)
 COMPETITORS = ["shopee", "lazada", "tiki", "thế giới di động", "fpt shop", "cellphones", "tiktok shop"]
-PROFANITY = ["đm", "vcl", "ngu", "chó", "mẹ mày", "cút"] # Thêm các từ tục tĩu phổ biến trong tiếng Việt
+PROFANITY = ["đm", "ngu", "chó", "con mẹ mày", "cút"] # Thêm các từ tục tĩu phổ biến trong tiếng Việt
 
 def check_competitors(text: str)-> bool:
     """Kiểm tra xem AI có lỡ mồm nhắc đến đối thủ không."""
