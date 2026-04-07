@@ -6,6 +6,9 @@ Tự động nạp và validate dữ liệu từ file .env
 import urllib.parse
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field,computed_field
+import os 
+from dotenv import load_dotenv
+load_dotenv()
 
 class Settings(BaseSettings):
     """
@@ -58,3 +61,4 @@ class Settings(BaseSettings):
 # khoi tạo instance cấu hình toàn cục
 settings = Settings()
 
+os.environ["ANONYMIZED_TELEMETRY"] = str(settings.ANONYMIZED_TELEMETRY).lower()

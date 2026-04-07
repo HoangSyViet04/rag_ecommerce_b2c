@@ -1,6 +1,6 @@
 # --- Core Framework & Server ---
 fastapi==0.110.0
-uvicorn ==0.27.1
+uvicorn==0.27.1
 pydantic>=2.6,<3.0
 pydantic-settings>=2.2,<3.0
 
@@ -9,15 +9,14 @@ sqlalchemy==2.0.28
 pyodbc==5.1.0
 cryptography==42.0.5
 
-# --- LangChain Ecosystem ---
-langchain==0.1.13
-langchain-core 
-langchain-community 
-langchain-text-splitters==0.0.1
-langsmith==0.1.17
-langchain-chroma==0.1.0
-langchain-google-genai==0.0.11
-langchain-experimental==0.0.55
+# --- LangChain Ecosystem (Bản ổn định 0.2.x) ---
+langchain==0.2.16
+langchain-core==0.2.43
+langchain-community==0.2.16
+langchain-text-splitters==0.2.4
+langsmith==0.1.147
+langchain-chroma==0.1.4
+langchain-experimental==0.0.64
 
 # --- Vector DB ---
 chromadb==0.4.24
@@ -28,7 +27,7 @@ rank-bm25==0.2.2
 pypdf==4.0.2
 docx2txt==0.8
 
-# --- Caching & Messaging ---
+# --- Caching & Local Models ---
 redis
 sentence-transformers
-langchain-huggingface
+# Không cần các gói lẻ tẻ nữa vì đã có sẵn trong langchain-community

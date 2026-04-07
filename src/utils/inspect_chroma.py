@@ -7,8 +7,8 @@ Cách dùng: Chạy file này, nó sẽ kết nối vào thư mục chứa Chrom
 
 import os
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from src.core.config import settings
 
 def inspect_vector_db():

@@ -12,8 +12,8 @@ Khởi tạo Singleton VectorStore để dùng chung cho toàn bộ hệ thống
 import os
 import pickle
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from src.core.config import settings
 
 def get_vector_db():

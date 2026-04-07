@@ -7,8 +7,8 @@ Có thể gắn vào Cronjob (chạy mỗi 5 phút) hoặc gọi qua Webhook khi
 import os 
 from sqlalchemy import create_engine , text
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # import cau hinh
 from src.core.config import settings
