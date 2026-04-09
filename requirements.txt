@@ -30,4 +30,7 @@ docx2txt==0.8
 # --- Caching & Local Models ---
 redis
 sentence-transformers
-# Không cần các gói lẻ tẻ nữa vì đã có sẵn trong langchain-community
+
+# Evaluation
+ragas 
+datasets
